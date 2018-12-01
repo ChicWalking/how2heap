@@ -18,13 +18,13 @@ int main()
 	free(a);
 
 	printf("If we free %p again, things will crash because %p is at the top of the free list.\n", a, a);
-	// free(a);
+	// free(a);   不能直接释放a，应为a刚释放过，在fastbins链表头部，释放会报错
 
 	printf("So, instead, we'll free %p.\n", b);
-	free(b);
+	free(b);   //释放b，将b，会将b加入到fastbins头部，后面紧跟的就是a
 
 	printf("Now, we can free %p again, since it's not the head of the free list.\n", a);
-	free(a);
+	free(a);   //fastbin表，如果不进行大数据操作，让fastbins表清空，不会释放，再次释放，会导致链表头尾互相指向
 
 	printf("Now the free list has [ %p, %p, %p ]. If we malloc 3 times, we'll get %p twice!\n", a, b, a, a);
 	printf("1st malloc(8): %p\n", malloc(8));
